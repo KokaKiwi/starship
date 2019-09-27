@@ -15,6 +15,7 @@ pub const ALL_MODULES: &[&str] = &[
     "conda",
     "directory",
     "dotnet",
+    "elixir",
     "env_var",
     "git_branch",
     "git_state",
