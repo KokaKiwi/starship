@@ -1,7 +1,5 @@
-use crate::config::Config;
-use crate::segment::Segment;
-use ansi_term::Style;
-use ansi_term::{ANSIString, ANSIStrings};
+use crate::{config::Config, segment::Segment};
+use ansi_term::{ANSIString, ANSIStrings, Style};
 use std::fmt;
 
 // List of all modules
@@ -40,7 +38,8 @@ pub struct Module<'a> {
     /// The module's name, to be used in configuration and logging.
     _name: String,
 
-    /// The styling to be inherited by all segments contained within this module.
+    /// The styling to be inherited by all segments contained within this
+    /// module.
     style: Style,
 
     /// The prefix used to separate the current module from the previous one.
@@ -77,7 +76,8 @@ impl<'a> Module<'a> {
         self.segments.last_mut().unwrap()
     }
 
-    /// Should config exists, get a reference to a newly created segment in the module
+    /// Should config exists, get a reference to a newly created segment in the
+    /// module
     pub fn new_segment_if_config_exists(&mut self, name: &str) -> Option<&mut Segment> {
         // Use the provided value unless overwritten by config
         if let Some(value) = self.config_value_str(name) {
@@ -167,6 +167,26 @@ impl<'a> Module<'a> {
     pub fn config_value_array(&self, key: &str) -> Option<&Vec<toml::Value>> {
         self.config.and_then(|config| config.get_as_array(key))
     }
+
+    pub(crate) fn config(&mut self) {
+        let module_prefix = self.config_value_str("module_prefix").map(ToOwned::to_owned);
+        let module_prefix_style = self.config_value_style("module_prefix_style");
+        let module_suffix = self.config_value_str("module_suffix").map(ToOwned::to_owned);
+        let module_suffix_style = self.config_value_style("module_suffix_style");
+
+        if let Some(prefix) = module_prefix {
+            self.get_prefix().set_value(prefix);
+        }
+        if let Some(prefix_style) = module_prefix_style {
+            self.get_prefix().set_style(prefix_style);
+        }
+        if let Some(suffix) = module_suffix {
+            self.get_suffix().set_value(suffix);
+        }
+        if let Some(suffix_style) = module_suffix_style {
+            self.get_suffix().set_style(suffix_style);
+        }
+    }
 }
 
 impl<'a> fmt::Display for Module<'a> {
@@ -176,9 +196,10 @@ impl<'a> fmt::Display for Module<'a> {
     }
 }
 
-/// Many shells cannot deal with raw unprintable characters (like ANSI escape sequences) and
-/// miscompute the cursor position as a result, leading to strange visual bugs. Here, we wrap these
-/// characters in shell-specific escape codes to indicate to the shell that they are zero-length.
+/// Many shells cannot deal with raw unprintable characters (like ANSI escape
+/// sequences) and miscompute the cursor position as a result, leading to
+/// strange visual bugs. Here, we wrap these characters in shell-specific escape
+/// codes to indicate to the shell that they are zero-length.
 fn ansi_strings_modified(ansi_strings: Vec<ANSIString>, shell: String) -> Vec<ANSIString> {
     const ESCAPE_BEGIN: char = '\u{1b}';
     const MAYBE_ESCAPE_END: char = 'm';

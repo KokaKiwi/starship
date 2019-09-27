@@ -1,4 +1,5 @@
-// While adding out new module add out module to src/module.rs ALL_MODULES const array also.
+// While adding out new module add out module to src/module.rs ALL_MODULES const
+// array also.
 mod aws;
 mod character;
 mod cmd_duration;
@@ -24,11 +25,10 @@ mod username;
 #[cfg(feature = "battery")]
 mod battery;
 
-use crate::context::Context;
-use crate::module::Module;
+use crate::{context::Context, module::Module};
 
-pub fn handle<'a>(module: &str, context: &'a Context) -> Option<Module<'a>> {
-    match module {
+pub fn handle<'a>(name: &str, context: &'a Context) -> Option<Module<'a>> {
+    let mut module = match name {
         "aws" => aws::module(context),
         "directory" => directory::module(context),
         "env_var" => env_var::module(context),
@@ -54,8 +54,17 @@ pub fn handle<'a>(module: &str, context: &'a Context) -> Option<Module<'a>> {
         "time" => time::module(context),
 
         _ => {
-            eprintln!("Error: Unknown module {}. Use starship module --list to list out all supported modules.", module);
+            eprintln!(
+                "Error: Unknown module {}. Use starship module --list to list out all supported modules.",
+                name
+            );
             None
         }
+    };
+
+    if let Some(ref mut module) = module {
+        module.config();
     }
+
+    module
 }
